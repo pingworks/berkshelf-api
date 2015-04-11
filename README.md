@@ -4,6 +4,8 @@
 
 A server which indexes cookbooks from various sources and hosts it over a REST API
 
+Additionally this version implements a binrepo_store that works as binary repository for released cookbooks.
+
 ## Installation
 
 The API server can be installed in two ways; from a Chef Cookbook (recommended) and from a Rubygem.
