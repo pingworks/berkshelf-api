@@ -1,0 +1,13 @@
+{
+  "home_path":"/etc/berkshelf/api-server",
+  "endpoints": [
+    {
+      "type": "binrepo_store",
+      "options": {
+        "repo_base_url": "http://berks-api-binrepo",
+        "path": "/var/berks-api-binrepo/cookbooks",
+	    "import": "/var/berks-api-binrepo/import"
+      }
+    }
+  ]
+}
