@@ -4,7 +4,7 @@
 
 A server which indexes cookbooks from various sources and hosts it over a REST API
 
-Additionally this version implements a binrepo_store that works as binary repository for released cookbooks.
+This fork implements a binrepo_store that works as binary repository for released cookbooks.
 
 ## Installation
 
