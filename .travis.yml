@@ -1,19 +1,11 @@
 language: ruby
 rvm:
-  - 1.9.3
-  - 2.0.0
-  - 2.1
-notifications:
-  irc:
-    channels:
-      - "irc.freenode.org#berkshelf"
-    skip_join: true
-    use_notice: true
-env: USE_SYSTEM_GECODE=1
-bundler_args: --without development --jobs 7
-before_install:
-  - sudo apt-get install -qq libarchive12 libarchive-dev libgecode-dev
-before_script:
-  - git config --global user.email "ci@berkshelf.com"
-  - git config --global user.name "Berkshelf"
-script: bundle exec rspec --color --format progress
+- 2.1
+deploy:
+  provider: rubygems
+  api_key:
+    secure: nAMiSsGYNEADPNt6cwfUu0ph5GdYOsN7JiVZ9caLxqpZxATWUyoJdGiiymV1mF7hrRnyMGggOF227mlXgTg4Gb8rq1gCzrxjQSYfmfpd/j1K2SAPbVwoeCCxIIArcOwfvHo4MQV1KN3pkECkffGD9atx9pm118N81UaNPy4LEMBoKMK51SHnTP4vZoWCDVI/rTnYDHmZidrnUp48Wu/Wgr0vUuntdLqNezYO/H88EMbwJO0sVlMnlZeVrdOmpA56jdm2PYFma+uJCohsZeF64pOQHhpgI9WxwZwyVlkaJxA6t9LDBA7Z3qOhBMIOAJs1ZQfE26ksiNsqQU7rke4+3C/gm7TeeukaLLLTuh8qnIshIXXtoW+eqsUIlMCO+bOnPef2gC/ZtIWjM0j+sYOYemJWhVUsS8guNmH7Bjk3xXsTDGewB2E4pZM37c6+VPlbLTgBRalZycsdQv4XiC32RNvmHV0Zr7j0zVTpAl4UOYJW5bC22FEAzrts6fuWCKwZcc2EO5mxSWqw9DMUNBqXbhuqZVX/2kNyHof0EWpYcrOzJ/fz/lWc9M9ImPIRbLq8h66OYzyARa74BZxLYWai0mF9eVc09maziBdX9u7ab2FBEFBwOLWXIrvazfBV12KZBH+ExqDIQnzjN6Uhk7h7z4obbgxTi6s/I2e1bdPL2uY=
+  gem: berkshelf-api-binrepo-store
+  on:
+    tags: true
+    repo: pingworks/berkshelf-api-binrepo-store
