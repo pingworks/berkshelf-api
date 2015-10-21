@@ -10,7 +10,7 @@ Vagrant.configure("2") do |config|
   config.vm.network :forwarded_port, guest: 80, host: 8084
 
   # uncomment for development
-  #config.vm.synced_folder "../lib", "/opt/berkshelf-api/v2.1.1/lib", mount_options: ["dmode=777","fmode=777"]
+  config.vm.synced_folder "../lib", "/opt/berkshelf-api/v2.1.1/lib", mount_options: ["dmode=777","fmode=777"]
 
   config.vm.provider :virtualbox do |vb|
     vb.customize ["modifyvm", :id, "--memory", 1024]

@@ -44,10 +44,14 @@ module Berkshelf::API
               cb_name = File.basename(cb_dir)
               Pathname(cb_dir).each_child do |cb_version_dir|
                 cb_version = File.basename(cb_version_dir)
-                log.info "Found version #{cb_version} of cookbook #{cb_name}."
-                log.info "Registering released cookbook #{cb_name}_#{cb_version}.tar.gz..."
-                cookbook_versions << RemoteCookbook.new(cb_name, cb_version,
-                                                        self.class.worker_type, "#{@repo_base_url}/cookbooks/#{cb_name}/#{cb_version}/#{cb_name}_#{cb_version}.tar.gz", priority, {'repo_path' => "#{cb_version_dir}", 'package' => "#{cb_name}_#{cb_version}.tar.gz"})
+                if File.exist?("#{cb_version_dir}/#{cb_name}_#{cb_version}.tar.gz")
+                  log.info "Found version #{cb_version} of cookbook #{cb_name}."
+                  log.info "Registering released cookbook #{cb_name}_#{cb_version}.tar.gz..."
+                  cookbook_versions << RemoteCookbook.new(cb_name, cb_version,
+                                                          self.class.worker_type, "#{@repo_base_url}/cookbooks/#{cb_name}/#{cb_version}/#{cb_name}_#{cb_version}.tar.gz", priority, {'repo_path' => "#{cb_version_dir}", 'package' => "#{cb_name}_#{cb_version}.tar.gz"})
+                else
+                  log.info "Cannot register cookbook #{cb_name}_#{cb_version}.tar.gz yet (bundle not fully unpacked yet)..."
+                end
               end
             end
           end
@@ -74,25 +78,33 @@ module Berkshelf::API
 
             cb_full_tar = File.basename(cb_bundle)
 
-            cb_version = extract_version(cb_full_tar)
-            cb_name = extract_name(cb_full_tar)
-            cb_dir = "#{@path}/#{cb_name}/#{cb_version}"
+            begin
+              cb_version = extract_version(cb_full_tar)
+              cb_name = extract_name(cb_full_tar)
+              cb_single_tar = "#{cb_name}_#{cb_version}.tar.gz"
+              cb_dir = "#{@path}/#{cb_name}/#{cb_version}"
 
-            log.info "Found cookbook bundle #{File.basename(cb_bundle)} in import dir (name: #{cb_name} version: #{cb_version})."
+              log.info "Found cookbook bundle #{File.basename(cb_bundle)} in import dir (name: #{cb_name} version: #{cb_version})."
 
-            unless File.exist?("#{cb_dir}/#{cb_full_tar}")
-              log.info "Importing cookbook bundle #{cb_full_tar}..."
+              if !File.exist?("#{cb_dir}/#{cb_full_tar}") || !File.exist?("#{cb_dir}/#{cb_single_tar}")
+                log.info "Importing cookbook bundle #{cb_full_tar}..."
 
-              FileUtils.mkdir_p cb_dir unless Dir.exist?(cb_dir)
+                FileUtils.mkdir_p cb_dir unless Dir.exist?(cb_dir)
 
-              FileUtils.mv(cb_bundle, cb_dir)
+                FileUtils.cp(cb_bundle, cb_dir)
 
-              unpack_single_cbs(cb_dir, cb_full_tar)
+                unpack_single_cbs(cb_dir, cb_full_tar)
 
-            else
-              log.warn "Cookbook #{cb_name}@#{cb_version} already exists! WILL NOT OVERWRITE!"
-              log.warn "Removing already imported cookbook from import dir..."
+              else
+                log.warn "Cookbook #{cb_name}@#{cb_version} already exists! WILL NOT OVERWRITE!"
+                log.warn "Removing already imported cookbook from import dir..."
+              end
+
               FileUtils.rm(cb_bundle)
+
+            rescue => ex
+              log.error "Failed to import cookbook pkg #{cb_full_tar}: #{ex.message}"
+              log.info "Leaving cookbook pkg #{cb_full_tar} untouched."
             end
           end
         end
@@ -103,9 +115,12 @@ module Berkshelf::API
         def unpack_single_cbs(cb_dir, cb_full_tar)
 
           Dir.mktmpdir('unpack_', cb_dir) do |unpack_dir|
+
             unpack_tar("#{cb_dir}/#{cb_full_tar}", unpack_dir)
+
             Pathname("#{unpack_dir}/cookbooks/").each_child do |cb|
               metadata = load_metadata(cb)
+
               cb_single_tar = "#{metadata.name}_#{metadata.version}.tar.gz"
               cb_single_dir = "#{@path}/#{metadata.name}/#{metadata.version}"
 
@@ -121,7 +136,9 @@ module Berkshelf::API
         #
         # @return [String]
         def extract_version(cb_bundle_filename)
-          cb_bundle_filename.gsub(/^.*_(\d+\.\d+.\d+)-full\.tar\.gz$/, '\1')
+          version = cb_bundle_filename.gsub(/^.*_(\d+\.\d+.\d+)-full\.tar\.gz$/, '\1')
+          fail "Failed to extract cookbook version correctly! (#{version}, is this name following the naming convention?)" unless version.match(/^\d+\.\d+\.\d+$/)
+          version
         end
 
         # extract cookbook name from bundle tar-archive
@@ -129,7 +146,9 @@ module Berkshelf::API
         #
         # @return [String]
         def extract_name(cb_bundle_filename)
-          cb_bundle_filename.gsub(/^(.*)_\d+\.\d+.\d+-full\.tar\.gz$/, '\1')
+          name = cb_bundle_filename.gsub(/^(.*)_\d+\.\d+.\d+-full\.tar\.gz$/, '\1')
+          fail "Failed to extract cookbook name correctly! (#{name}, is this name following the naming convention?)" unless name.match(/^[0-9A-Za-z_-]+$/)
+          name
         end
 
         # Helper function for loading metadata from a particular directory
@@ -142,7 +161,18 @@ module Berkshelf::API
           cookbook = Ridley::Chef::Cookbook.from_path(path)
           cookbook.metadata
         rescue => ex
-          nil
+          log.error "Failed to load metadata from cookbook #{path}: #{ex.message}"
+          log.info "Trying to get metadata info manually..."
+          if File.exist?("#{path}/metadata.json")
+            log.info "Reading #{path}/metadata.json ..."
+            metadata_json = nil
+            File.open("#{path}/metadata.json") do |file|
+              log.info("ENV[LANG]=#{ENV['LANG']}")
+              metadata_json = JSON.parse file.read
+            end
+            log.info "metadata_json: #{metadata_json}"
+
+          end
         end
 
 
