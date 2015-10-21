@@ -119,13 +119,14 @@ module Berkshelf::API
             unpack_tar("#{cb_dir}/#{cb_full_tar}", unpack_dir)
 
             Pathname("#{unpack_dir}/cookbooks/").each_child do |cb|
+              cb_dir = File.basename(cb)
               metadata = load_metadata(cb)
 
               cb_single_tar = "#{metadata.name}_#{metadata.version}.tar.gz"
               cb_single_dir = "#{@path}/#{metadata.name}/#{metadata.version}"
 
               FileUtils.mkdir_p cb_single_dir unless Dir.exist?(cb_single_dir)
-              system("cd #{cb}; tar cfz #{cb_single_dir}/#{cb_single_tar} .") unless File.exist?("#{cb_single_dir}/#{cb_single_tar}")
+              system("cd #{unpack_dir}/cookbooks; tar cfz #{cb_single_dir}/#{cb_single_tar} #{cb_dir}") unless File.exist?("#{cb_single_dir}/#{cb_single_tar}")
               FileUtils.cp_r(cb, cb_single_dir) unless Dir.exist?("#{cb_single_dir}/#{metadata.name}")
             end
           end
