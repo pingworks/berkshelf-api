@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = 'berkshelf-api-binrepo-store'
-  spec.version       = '0.1.0'
+  spec.version       = '0.1.1'
   spec.authors       = ['Alexander Birk']
   spec.email         = ['birk@pingworks.de']
   spec.description   = 'Binrepo Worker for Berkshelf dependency API server'
