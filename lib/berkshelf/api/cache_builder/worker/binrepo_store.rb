@@ -48,7 +48,7 @@ module Berkshelf::API
                   log.info "Found version #{cb_version} of cookbook #{cb_name}."
                   log.info "Registering released cookbook #{cb_name}_#{cb_version}.tar.gz..."
                   cookbook_versions << RemoteCookbook.new(cb_name, cb_version,
-                                                          self.class.worker_type, "#{@repo_base_url}/cookbooks/#{cb_name}/#{cb_version}/#{cb_name}_#{cb_version}.tar.gz", priority, {'repo_path' => "#{cb_version_dir}", 'package' => "#{cb_name}_#{cb_version}.tar.gz"})
+                                                          'uri', "#{@repo_base_url}/cookbooks/#{cb_name}/#{cb_version}/#{cb_name}_#{cb_version}.tar.gz", priority, {'repo_path' => "#{cb_version_dir}", 'package' => "#{cb_name}_#{cb_version}.tar.gz"})
                 else
                   log.info "Cannot register cookbook #{cb_name}_#{cb_version}.tar.gz yet (bundle not fully unpacked yet)..."
                 end

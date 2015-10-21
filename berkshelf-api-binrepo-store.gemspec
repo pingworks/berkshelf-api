@@ -15,6 +15,4 @@ Gem::Specification.new do |spec|
   spec.files         = Dir['README.md', 'LICENSE', 'lib/berkshelf/api/cache_builder/worker/binrepo_store.rb']
   spec.require_paths = ['lib']
   spec.required_ruby_version = '>= 1.9.3'
-
-  spec.add_dependency 'berkshelf', '~> 2.1.1'
 end
